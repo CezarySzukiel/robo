@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import {
-  DEFAULT_DURATION_MS,
+  type HeadStyle,
   type JointName,
   type LockSegment,
   cameraHeightConfig,
@@ -9,123 +9,99 @@ import {
   jointNames,
   neutralAngles,
 } from "./robot-config";
+import {
+  type SceneObjectPosition,
+  ballPositionConfig,
+  clampBallPosition,
+} from "./scene-object-config";
 
 export type RobotAngles = Record<JointName, number>;
-
-export type JointAnimation = {
-  fromDeg: number;
-  toDeg: number;
-  startedAt: number;
-  durationMs: number;
-};
 
 export type RobotSnapshot = {
   currentAngles: RobotAngles;
   targetAngles: RobotAngles;
+  headStyle: HeadStyle;
   lockedSegment: LockSegment;
+  groundCollisionEnabled: boolean;
   cameraHeight: number;
 };
 
 type RobotStore = RobotSnapshot & {
-  animations: Partial<Record<JointName, JointAnimation>>;
+  ballPosition: SceneObjectPosition;
+  ballPlacementPosition: SceneObjectPosition;
+  ballResetSerial: number;
   resetSerial: number;
   cameraResetSerial: number;
-  animateToAngles: (angles: Partial<RobotAngles>, durationMs?: number) => void;
-  tickAnimations: (now: number) => void;
+  setAngles: (angles: Partial<RobotAngles>) => void;
   setCameraHeight: (height: number) => void;
+  setGroundCollisionEnabled: (enabled: boolean) => void;
+  setHeadStyle: (style: HeadStyle) => void;
   setLockedSegment: (segment: LockSegment) => void;
+  setBallPosition: (position: SceneObjectPosition) => void;
+  syncBallPosition: (position: SceneObjectPosition) => void;
   resetCamera: () => void;
-  resetPose: (durationMs?: number) => void;
+  resetBall: () => void;
+  resetPose: () => void;
 };
 
 function cloneAngles(angles: RobotAngles): RobotAngles {
   return { ...angles };
 }
 
-function easeInOutCubic(value: number) {
-  return value < 0.5
-    ? 4 * value * value * value
-    : 1 - Math.pow(-2 * value + 2, 3) / 2;
-}
-
-function interpolate(from: number, to: number, progress: number) {
-  return from + (to - from) * progress;
-}
-
-export const useRobotStore = create<RobotStore>((set, get) => ({
+export const useRobotStore = create<RobotStore>((set) => ({
   currentAngles: cloneAngles(neutralAngles),
   targetAngles: cloneAngles(neutralAngles),
-  animations: {},
+  headStyle: "minecraft",
   lockedSegment: null,
+  groundCollisionEnabled: true,
   cameraHeight: cameraHeightConfig.neutral,
+  ballPosition: { ...ballPositionConfig.initial },
+  ballPlacementPosition: { ...ballPositionConfig.initial },
+  ballResetSerial: 0,
   resetSerial: 0,
   cameraResetSerial: 0,
 
-  animateToAngles: (incomingAngles, durationMs = DEFAULT_DURATION_MS) => {
-    const now = performance.now();
-    const { currentAngles, targetAngles, animations } = get();
-    const nextTargets = { ...targetAngles };
-    const nextAnimations = { ...animations };
+  setAngles: (incomingAngles) => {
+    set((state) => {
+      const nextAngles = { ...state.currentAngles };
 
-    for (const [joint, value] of Object.entries(incomingAngles) as [JointName, number][]) {
-      if (!jointNames.includes(joint)) {
-        continue;
+      for (const [joint, value] of Object.entries(incomingAngles) as [JointName, number][]) {
+        if (jointNames.includes(joint)) {
+          nextAngles[joint] = clampJointAngle(joint, value);
+        }
       }
 
-      const angleDeg = clampJointAngle(joint, value);
-      nextTargets[joint] = angleDeg;
-      nextAnimations[joint] = {
-        fromDeg: currentAngles[joint],
-        toDeg: angleDeg,
-        startedAt: now,
-        durationMs: Math.max(0, durationMs),
+      return {
+        currentAngles: nextAngles,
+        targetAngles: { ...nextAngles },
       };
-    }
-
-    set({
-      targetAngles: nextTargets,
-      animations: nextAnimations,
-    });
-  },
-
-  tickAnimations: (now) => {
-    const { animations, currentAngles } = get();
-    const entries = Object.entries(animations) as [JointName, JointAnimation][];
-
-    if (entries.length === 0) {
-      return;
-    }
-
-    const nextAngles = { ...currentAngles };
-    const nextAnimations: Partial<Record<JointName, JointAnimation>> = {};
-
-    for (const [joint, animation] of entries) {
-      const rawProgress =
-        animation.durationMs === 0
-          ? 1
-          : (now - animation.startedAt) / animation.durationMs;
-      const progress = Math.min(1, Math.max(0, rawProgress));
-      nextAngles[joint] = interpolate(
-        animation.fromDeg,
-        animation.toDeg,
-        easeInOutCubic(progress),
-      );
-
-      if (progress < 1) {
-        nextAnimations[joint] = animation;
-      } else {
-        nextAngles[joint] = animation.toDeg;
-      }
-    }
-
-    set({
-      currentAngles: nextAngles,
-      animations: nextAnimations,
     });
   },
 
   setLockedSegment: (segment) => {
     set({ lockedSegment: segment });
+  },
+
+  setBallPosition: (position) => {
+    const nextPosition = clampBallPosition(position);
+
+    set((state) => ({
+      ballPosition: nextPosition,
+      ballPlacementPosition: nextPosition,
+      ballResetSerial: state.ballResetSerial + 1,
+    }));
+  },
+
+  syncBallPosition: (position) => {
+    set({ ballPosition: { ...position } });
+  },
+
+  setGroundCollisionEnabled: (enabled) => {
+    set({ groundCollisionEnabled: enabled });
+  },
+
+  setHeadStyle: (style) => {
+    set({ headStyle: style });
   },
 
   setCameraHeight: (height) => {
@@ -139,8 +115,19 @@ export const useRobotStore = create<RobotStore>((set, get) => ({
     }));
   },
 
-  resetPose: (durationMs = DEFAULT_DURATION_MS) => {
-    get().animateToAngles(cloneAngles(neutralAngles), durationMs);
-    set((state) => ({ resetSerial: state.resetSerial + 1 }));
+  resetBall: () => {
+    set((state) => ({
+      ballPosition: { ...ballPositionConfig.initial },
+      ballPlacementPosition: { ...ballPositionConfig.initial },
+      ballResetSerial: state.ballResetSerial + 1,
+    }));
+  },
+
+  resetPose: () => {
+    set((state) => ({
+      currentAngles: cloneAngles(neutralAngles),
+      targetAngles: cloneAngles(neutralAngles),
+      resetSerial: state.resetSerial + 1,
+    }));
   },
 }));

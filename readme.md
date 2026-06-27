@@ -17,6 +17,11 @@ window.robotApi.applyRobotCommand({
   type: "set_joint",
   joint: "leftHip",
   angleDeg: 30,
-  durationMs: 250,
 });
 ```
+
+Komendy stawów działają natychmiast, dokładnie tak jak suwaki.
+
+## Backend
+
+Szkielet FastAPI w `backend/` przekazuje komendy do frontendu przez WebSocket. Instrukcja uruchomienia i przykład sterowania prawą nogą znajdują się w `backend/readme.md`.

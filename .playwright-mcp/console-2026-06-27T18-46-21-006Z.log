@@ -1,0 +1,7 @@
+[     652ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://127.0.0.1:5174/node_modules/.vite/deps/chunk-YOUTX2GE.js?v=e87a8a2f:19834
+[     959ms] [WARNING] [.WebGL-0x114c000f2400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels @ http://127.0.0.1:5174/:0
+[    1257ms] [WARNING] [.WebGL-0x114c000f2400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels @ http://127.0.0.1:5174/:0
+[    1334ms] [WARNING] using deprecated parameters for the initialization function; pass a single object instead @ http://127.0.0.1:5174/node_modules/.vite/deps/chunk-YETPO7O4.js?v=e87a8a2f:2516
+[    1336ms] [WARNING] [.WebGL-0x114c000f2400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels @ http://127.0.0.1:5174/:0
+[    1371ms] [WARNING] [.WebGL-0x114c000f2400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat) @ http://127.0.0.1:5174/:0
+[   84000ms] [LOG] [vite] server connection lost. Polling for restart... @ http://127.0.0.1:5174/@vite/client:864

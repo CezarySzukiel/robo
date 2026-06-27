@@ -1,21 +1,38 @@
-import { Camera, RotateCcw } from "lucide-react";
+import { ChevronDown, ChevronUp, Camera, CircleDot, RotateCcw } from "lucide-react";
+import { useId, useState } from "react";
 import {
   type AnchorableSegment,
+  type HeadStyle,
   type JointName,
   cameraHeightConfig,
   jointConfig,
   lockSegments,
 } from "../robot/robot-config";
-import { lockSegment, resetCamera, resetPose, setCameraHeight, setJoint } from "../robot/robot-api";
+import {
+  lockSegment,
+  resetBall,
+  resetCamera,
+  resetPose,
+  setCameraHeight,
+  setGroundCollision,
+  setHeadStyle,
+  setJoint,
+} from "../robot/robot-api";
 import { useRobotStore } from "../robot/robot-store";
 
 const leftJoints: JointName[] = ["leftHip", "leftKnee", "leftAnkle"];
 const rightJoints: JointName[] = ["rightHip", "rightKnee", "rightAnkle"];
-const armJoints: JointName[] = [
+const headJoints: JointName[] = ["headYaw", "headPitch"];
+const torsoJoints: JointName[] = ["waist"];
+const leftArmJoints: JointName[] = [
   "leftShoulder",
   "leftShoulderSide",
+  "leftElbow",
+];
+const rightArmJoints: JointName[] = [
   "rightShoulder",
   "rightShoulderSide",
+  "rightElbow",
 ];
 
 const segmentLabels: Record<AnchorableSegment, string> = {
@@ -72,8 +89,8 @@ function JointControl({ joint }: { joint: JointName }) {
   const currentAngle = useRobotStore((state) => state.currentAngles[joint]);
   const config = jointConfig[joint];
 
-  const updateValue = (value: number, durationMs: number) => {
-    setJoint(joint, value, durationMs);
+  const updateValue = (value: number) => {
+    setJoint(joint, value);
   };
 
   return (
@@ -88,7 +105,7 @@ function JointControl({ joint }: { joint: JointName }) {
           className="joint-control__range"
           max={config.max}
           min={config.min}
-          onChange={(event) => updateValue(Number(event.target.value), 35)}
+          onChange={(event) => updateValue(Number(event.target.value))}
           step={config.step}
           type="range"
           value={targetAngle}
@@ -98,7 +115,7 @@ function JointControl({ joint }: { joint: JointName }) {
           className="joint-control__number"
           max={config.max}
           min={config.min}
-          onChange={(event) => updateValue(Number(event.target.value), 160)}
+          onChange={(event) => updateValue(Number(event.target.value))}
           step={config.step}
           type="number"
           value={Number(targetAngle.toFixed(1))}
@@ -109,10 +126,28 @@ function JointControl({ joint }: { joint: JointName }) {
 }
 
 function JointGroup({ joints, title }: { joints: JointName[]; title: string }) {
+  const [isOpen, setIsOpen] = useState(true);
+  const controlsId = useId();
+
   return (
-    <section className="control-section" aria-label={title}>
-      <h2>{title}</h2>
-      <div className="joint-list">
+    <section className="control-section" aria-label={title} data-open={isOpen}>
+      <h2>
+        <button
+          aria-controls={controlsId}
+          aria-expanded={isOpen}
+          className="joint-group-toggle"
+          onClick={() => setIsOpen((open) => !open)}
+          type="button"
+        >
+          <span>{title}</span>
+          {isOpen ? (
+            <ChevronUp aria-hidden="true" size={18} />
+          ) : (
+            <ChevronDown aria-hidden="true" size={18} />
+          )}
+        </button>
+      </h2>
+      <div className="joint-list" hidden={!isOpen} id={controlsId}>
         {joints.map((joint) => (
           <JointControl joint={joint} key={joint} />
         ))}
@@ -123,6 +158,8 @@ function JointGroup({ joints, title }: { joints: JointName[]; title: string }) {
 
 export function ControlPanel() {
   const lockedSegment = useRobotStore((state) => state.lockedSegment);
+  const groundCollisionEnabled = useRobotStore((state) => state.groundCollisionEnabled);
+  const headStyle = useRobotStore((state) => state.headStyle);
 
   return (
     <aside className="control-panel" aria-label="Aktualne kąty stawów">
@@ -158,9 +195,45 @@ export function ControlPanel() {
             </select>
           </div>
 
+          <div className="lock-row head-style-row">
+            <label htmlFor="head-style">Głowa</label>
+            <select
+              id="head-style"
+              onChange={(event) => setHeadStyle(event.target.value as HeadStyle)}
+              value={headStyle}
+            >
+              <option value="round">Okrągła</option>
+              <option value="minecraft">Minecraft</option>
+            </select>
+          </div>
+
+          <label className="ground-lock">
+            <input
+              checked={groundCollisionEnabled}
+              onChange={(event) => setGroundCollision(event.target.checked)}
+              type="checkbox"
+            />
+            <span>Blokada podłoża</span>
+          </label>
+
+          <button
+            className="ball-reset"
+            onClick={() => {
+              resetPose();
+              resetBall();
+            }}
+            type="button"
+          >
+            <CircleDot aria-hidden="true" size={17} />
+            <span>Ustaw piłkę przed robotem</span>
+          </button>
+
+          <JointGroup title="Tułów" joints={torsoJoints} />
+          <JointGroup title="Głowa" joints={headJoints} />
+          <JointGroup title="Lewa ręka" joints={leftArmJoints} />
+          <JointGroup title="Prawa ręka" joints={rightArmJoints} />
           <JointGroup title="Lewa noga" joints={leftJoints} />
           <JointGroup title="Prawa noga" joints={rightJoints} />
-          <JointGroup title="Ramiona" joints={armJoints} />
         </div>
 
         <div className="camera-rail" aria-label="Kamera">

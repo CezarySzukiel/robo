@@ -1,0 +1,201 @@
+- main [ref=e3]:
+  - complementary "Aktualne kąty stawów" [ref=e7]:
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - paragraph [ref=e10]: Robot 3D
+        - heading "Aktualne kąty" [level=1] [ref=e11]
+      - button "Reset" [ref=e12] [cursor=pointer]:
+        - img [ref=e13]
+        - generic [ref=e16]: Reset
+    - generic [ref=e17]:
+      - generic [ref=e18]:
+        - generic [ref=e19]:
+          - generic [ref=e20]: Blokada
+          - combobox "Blokada" [ref=e21]:
+            - option "Brak" [selected]
+            - option "Lewa stopa"
+            - option "Prawa stopa"
+            - option "Miednica"
+            - option "Tułów"
+        - generic [ref=e22]:
+          - generic [ref=e23]: Głowa
+          - combobox "Głowa" [ref=e24]:
+            - option "Okrągła"
+            - option "Minecraft" [selected]
+        - generic [ref=e25] [cursor=pointer]:
+          - checkbox "Blokada podłoża" [checked] [ref=e26]
+          - generic [ref=e27]: Blokada podłoża
+        - button "Ustaw piłkę przed robotem" [ref=e28] [cursor=pointer]:
+          - img [ref=e29]
+          - generic [ref=e32]: Ustaw piłkę przed robotem
+        - region "Tułów" [ref=e33]:
+          - heading "Tułów" [level=2] [ref=e34]:
+            - button "Tułów" [expanded] [ref=e35] [cursor=pointer]:
+              - generic [ref=e36]: Tułów
+              - img [ref=e37]
+          - generic [ref=e40]:
+            - generic [ref=e41]:
+              - generic [ref=e42]: Zgięcie w biodrach
+              - generic [ref=e43]: 0.0°
+            - generic [ref=e44]:
+              - slider "Zgięcie w biodrach slider" [ref=e45] [cursor=pointer]: "0"
+              - spinbutton "Zgięcie w biodrach angle" [ref=e46]: "0"
+        - region "Głowa" [ref=e47]:
+          - heading "Głowa" [level=2] [ref=e48]:
+            - button "Głowa" [expanded] [ref=e49] [cursor=pointer]:
+              - generic [ref=e50]: Głowa
+              - img [ref=e51]
+          - generic [ref=e53]:
+            - generic [ref=e54]:
+              - generic [ref=e55]:
+                - generic [ref=e56]: Głowa lewo / prawo
+                - generic [ref=e57]: 0.0°
+              - generic [ref=e58]:
+                - slider "Głowa lewo / prawo slider" [ref=e59] [cursor=pointer]: "0"
+                - spinbutton "Głowa lewo / prawo angle" [ref=e60]: "0"
+            - generic [ref=e61]:
+              - generic [ref=e62]:
+                - generic [ref=e63]: Głowa dół / góra
+                - generic [ref=e64]: 0.0°
+              - generic [ref=e65]:
+                - slider "Głowa dół / góra slider" [ref=e66] [cursor=pointer]: "0"
+                - spinbutton "Głowa dół / góra angle" [ref=e67]: "0"
+        - region "Lewa ręka" [ref=e68]:
+          - heading "Lewa ręka" [level=2] [ref=e69]:
+            - button "Lewa ręka" [expanded] [ref=e70] [cursor=pointer]:
+              - generic [ref=e71]: Lewa ręka
+              - img [ref=e72]
+          - generic [ref=e74]:
+            - generic [ref=e75]:
+              - generic [ref=e76]:
+                - generic [ref=e77]: Lewe ramię przód
+                - generic [ref=e78]: 12.0°
+              - generic [ref=e79]:
+                - slider "Lewe ramię przód slider" [ref=e80] [cursor=pointer]: "12"
+                - spinbutton "Lewe ramię przód angle" [ref=e81]: "12"
+            - generic [ref=e82]:
+              - generic [ref=e83]:
+                - generic [ref=e84]: Lewe ramię bok
+                - generic [ref=e85]: 0.0°
+              - generic [ref=e86]:
+                - slider "Lewe ramię bok slider" [ref=e87] [cursor=pointer]: "0"
+                - spinbutton "Lewe ramię bok angle" [ref=e88]: "0"
+            - generic [ref=e89]:
+              - generic [ref=e90]:
+                - generic [ref=e91]: Lewy łokieć
+                - generic [ref=e92]: 14.0°
+              - generic [ref=e93]:
+                - slider "Lewy łokieć slider" [ref=e94] [cursor=pointer]: "14"
+                - spinbutton "Lewy łokieć angle" [ref=e95]: "14"
+        - region "Prawa ręka" [ref=e96]:
+          - heading "Prawa ręka" [level=2] [ref=e97]:
+            - button "Prawa ręka" [expanded] [ref=e98] [cursor=pointer]:
+              - generic [ref=e99]: Prawa ręka
+              - img [ref=e100]
+          - generic [ref=e102]:
+            - generic [ref=e103]:
+              - generic [ref=e104]:
+                - generic [ref=e105]: Prawe ramię przód
+                - generic [ref=e106]: 12.0°
+              - generic [ref=e107]:
+                - slider "Prawe ramię przód slider" [ref=e108] [cursor=pointer]: "12"
+                - spinbutton "Prawe ramię przód angle" [ref=e109]: "12"
+            - generic [ref=e110]:
+              - generic [ref=e111]:
+                - generic [ref=e112]: Prawe ramię bok
+                - generic [ref=e113]: 0.0°
+              - generic [ref=e114]:
+                - slider "Prawe ramię bok slider" [ref=e115] [cursor=pointer]: "0"
+                - spinbutton "Prawe ramię bok angle" [ref=e116]: "0"
+            - generic [ref=e117]:
+              - generic [ref=e118]:
+                - generic [ref=e119]: Prawy łokieć
+                - generic [ref=e120]: 14.0°
+              - generic [ref=e121]:
+                - slider "Prawy łokieć slider" [ref=e122] [cursor=pointer]: "14"
+                - spinbutton "Prawy łokieć angle" [ref=e123]: "14"
+        - region "Lewa noga" [ref=e124]:
+          - heading "Lewa noga" [level=2] [ref=e125]:
+            - button "Lewa noga" [expanded] [ref=e126] [cursor=pointer]:
+              - generic [ref=e127]: Lewa noga
+              - img [ref=e128]
+          - generic [ref=e130]:
+            - generic [ref=e131]:
+              - generic [ref=e132]:
+                - generic [ref=e133]: Lewe biodro
+                - generic [ref=e134]: 0.0°
+              - generic [ref=e135]:
+                - slider "Lewe biodro slider" [ref=e136] [cursor=pointer]: "0"
+                - spinbutton "Lewe biodro angle" [ref=e137]: "0"
+            - generic [ref=e138]:
+              - generic [ref=e139]:
+                - generic [ref=e140]: Lewe kolano
+                - generic [ref=e141]: 0.0°
+              - generic [ref=e142]:
+                - slider "Lewe kolano slider" [ref=e143] [cursor=pointer]: "0"
+                - spinbutton "Lewe kolano angle" [ref=e144]: "0"
+            - generic [ref=e145]:
+              - generic [ref=e146]:
+                - generic [ref=e147]: Lewy skokowy
+                - generic [ref=e148]: 0.0°
+              - generic [ref=e149]:
+                - slider "Lewy skokowy slider" [ref=e150] [cursor=pointer]: "0"
+                - spinbutton "Lewy skokowy angle" [ref=e151]: "0"
+        - region "Prawa noga" [ref=e152]:
+          - heading "Prawa noga" [level=2] [ref=e153]:
+            - button "Prawa noga" [expanded] [ref=e154] [cursor=pointer]:
+              - generic [ref=e155]: Prawa noga
+              - img [ref=e156]
+          - generic [ref=e158]:
+            - generic [ref=e159]:
+              - generic [ref=e160]:
+                - generic [ref=e161]: Prawe biodro
+                - generic [ref=e162]: 0.0°
+              - generic [ref=e163]:
+                - slider "Prawe biodro slider" [ref=e164] [cursor=pointer]: "0"
+                - spinbutton "Prawe biodro angle" [ref=e165]: "0"
+            - generic [ref=e166]:
+              - generic [ref=e167]:
+                - generic [ref=e168]: Prawe kolano
+                - generic [ref=e169]: 0.0°
+              - generic [ref=e170]:
+                - slider "Prawe kolano slider" [ref=e171] [cursor=pointer]: "0"
+                - spinbutton "Prawe kolano angle" [ref=e172]: "0"
+            - generic [ref=e173]:
+              - generic [ref=e174]:
+                - generic [ref=e175]: Prawy skokowy
+                - generic [ref=e176]: 0.0°
+              - generic [ref=e177]:
+                - slider "Prawy skokowy slider" [ref=e178] [cursor=pointer]: "0"
+                - spinbutton "Prawy skokowy angle" [ref=e179]: "0"
+      - generic "Kamera" [ref=e180]:
+        - generic "Wysokość kamery" [ref=e181]:
+          - button "Reset położenia kamery" [ref=e182] [cursor=pointer]:
+            - img [ref=e183]
+          - slider "Wysokość kamery slider" [ref=e186] [cursor=pointer]: "3.4"
+          - spinbutton "Wysokość kamery value" [ref=e187]: "3.4"
+  - complementary "Przedmioty na scenie" [ref=e188]:
+    - button "Przedmioty" [expanded] [ref=e189] [cursor=pointer]:
+      - generic [ref=e190]:
+        - img [ref=e191]
+        - text: Przedmioty
+      - img [ref=e194]
+    - generic [ref=e197]:
+      - button "Piłka" [expanded] [ref=e198] [cursor=pointer]:
+        - generic [ref=e199]:
+          - img [ref=e200]
+          - text: Piłka
+        - img [ref=e203]
+      - generic [ref=e205]:
+        - paragraph [ref=e206]: Położenie
+        - generic [ref=e207]:
+          - generic [ref=e208]:
+            - generic [ref=e209]: X
+            - spinbutton "Pozycja piłki X" [ref=e210]: "-0.34"
+          - generic [ref=e211]:
+            - generic [ref=e212]: "Y"
+            - spinbutton "Pozycja piłki Y" [ref=e213]: "0.24"
+          - generic [ref=e214]:
+            - generic [ref=e215]: Z
+            - spinbutton "Pozycja piłki Z" [ref=e216]: "1.12"
+        - button "Ustaw przed robotem" [ref=e217] [cursor=pointer]

@@ -4,10 +4,11 @@ import { Suspense, useRef } from "react";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { cameraHeightConfig } from "../robot/robot-config";
 import { useRobotStore } from "../robot/robot-store";
-import { RobotModel } from "./RobotModel";
+import { GROUND_CENTER_Z, GROUND_DEPTH, GROUND_WIDTH } from "../robot/scene-object-config";
+import { PhysicsPlayground } from "./PhysicsPlayground";
 
 const CAMERA_FLOOR_Y = 0.08;
-const MAX_CAMERA_DISTANCE = 18;
+const MAX_CAMERA_DISTANCE = 32;
 const MIN_POLAR_ANGLE = Math.PI * 0.03;
 const MAX_POLAR_ANGLE = Math.PI * 0.86;
 const DEFAULT_CAMERA_POSITION: [number, number, number] = [4.5, cameraHeightConfig.neutral, 5.2];
@@ -64,14 +65,13 @@ function ControlledOrbitControls() {
 export function RobotScene() {
   return (
     <Canvas
-      camera={{ position: DEFAULT_CAMERA_POSITION, fov: 42 }}
+      camera={{ position: DEFAULT_CAMERA_POSITION, far: 3000, fov: 42 }}
       dpr={[1, 2]}
       shadows
       className="robot-canvas"
     >
       <color attach="background" args={["#10120d"]} />
-      <fog attach="fog" args={["#10120d", MAX_CAMERA_DISTANCE * 0.95, MAX_CAMERA_DISTANCE * 1.75]} />
-      <ambientLight intensity={0.78} />
+      <ambientLight intensity={1.1} />
       <directionalLight
         castShadow
         intensity={2.2}
@@ -80,20 +80,26 @@ export function RobotScene() {
       />
       <pointLight intensity={6} position={[-3.8, 3.2, -2.8]} color="#72d6c9" />
       <Suspense fallback={null}>
-        <RobotModel />
+        <PhysicsPlayground />
       </Suspense>
-      <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.012, 0]}>
-        <boxGeometry args={[7.2, 7.2, 0.024]} />
-        <meshStandardMaterial color="#394134" roughness={0.86} metalness={0.08} />
+      <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.012, GROUND_CENTER_Z]}>
+        <boxGeometry args={[GROUND_WIDTH, GROUND_DEPTH, 0.024]} />
+        <meshStandardMaterial
+          color="#465140"
+          emissive="#252d22"
+          emissiveIntensity={0.45}
+          metalness={0.08}
+          roughness={0.86}
+        />
       </mesh>
       <Grid
-        args={[7.2, 7.2]}
+        args={[GROUND_WIDTH, GROUND_DEPTH]}
         cellColor="#5e6f5b"
         cellSize={0.45}
         cellThickness={0.55}
-        fadeDistance={7.5}
+        fadeDistance={29}
         fadeStrength={1.2}
-        position={[0, 0.004, 0]}
+        position={[0, 0.004, GROUND_CENTER_Z]}
         sectionColor="#f6c75d"
         sectionSize={1.8}
         sectionThickness={1.15}

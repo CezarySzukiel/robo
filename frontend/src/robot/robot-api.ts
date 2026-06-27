@@ -1,28 +1,36 @@
 import type { StoreApi } from "zustand";
+import { getBallPhysicsState } from "./ball-physics-state";
 import {
-  DEFAULT_DURATION_MS,
+  type HeadStyle,
   type JointName,
   type LockSegment,
   clampCameraHeight,
   clampJointAngle,
   isJointName,
+  isHeadStyle,
   isLockSegment,
   jointNames,
 } from "./robot-config";
 import type { RobotSnapshot } from "./robot-store";
 import { useRobotStore } from "./robot-store";
+import type { SceneObjectPosition } from "./scene-object-config";
+import {
+  type JointMotion,
+  type ScheduledJointMotion,
+  cancelAllJointMotions,
+  cancelJointMotion,
+  scheduleJointMotion,
+} from "./joint-motion";
 
 export type SetJointCommand = {
   type: "set_joint";
   joint: JointName;
   angleDeg: number;
-  durationMs?: number;
 };
 
 export type SetJointsCommand = {
   type: "set_joints";
   anglesDeg: Partial<Record<JointName, number>>;
-  durationMs?: number;
 };
 
 export type LockSegmentCommand = {
@@ -30,9 +38,18 @@ export type LockSegmentCommand = {
   segment: LockSegment;
 };
 
+export type SetGroundCollisionCommand = {
+  type: "set_ground_collision";
+  enabled: boolean;
+};
+
+export type SetHeadStyleCommand = {
+  type: "set_head_style";
+  style: HeadStyle;
+};
+
 export type ResetPoseCommand = {
   type: "reset_pose";
-  durationMs?: number;
 };
 
 export type SetCameraHeightCommand = {
@@ -44,13 +61,25 @@ export type ResetCameraCommand = {
   type: "reset_camera";
 };
 
+export type ResetBallCommand = {
+  type: "reset_ball";
+};
+
+export type MoveJointCommand = JointMotion & {
+  type: "move_joint";
+};
+
 export type RobotCommand =
   | SetJointCommand
   | SetJointsCommand
   | LockSegmentCommand
+  | SetGroundCollisionCommand
+  | SetHeadStyleCommand
   | ResetPoseCommand
   | SetCameraHeightCommand
-  | ResetCameraCommand;
+  | ResetCameraCommand
+  | ResetBallCommand
+  | MoveJointCommand;
 
 export type RobotStateMessage = {
   type: "state";
@@ -62,18 +91,20 @@ export type RobotErrorMessage = {
   message: string;
 };
 
-export type RobotCommandResult = RobotStateMessage | RobotErrorMessage;
+export type RobotMotionScheduledMessage = {
+  type: "motion_scheduled";
+  motion: ScheduledJointMotion;
+};
+
+export type RobotCommandResult =
+  | RobotStateMessage
+  | RobotErrorMessage
+  | RobotMotionScheduledMessage;
 
 type RobotStoreApi = typeof useRobotStore & StoreApi<ReturnType<typeof useRobotStore.getState>>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
-}
-
-function normalizeDuration(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value)
-    ? Math.max(0, value)
-    : DEFAULT_DURATION_MS;
 }
 
 function stateMessage(): RobotStateMessage {
@@ -91,13 +122,26 @@ function errorMessage(message: string): RobotErrorMessage {
 }
 
 export function getRobotState(): RobotSnapshot {
-  const { cameraHeight, currentAngles, targetAngles, lockedSegment } = useRobotStore.getState();
+  const {
+    cameraHeight,
+    currentAngles,
+    groundCollisionEnabled,
+    headStyle,
+    targetAngles,
+    lockedSegment,
+  } = useRobotStore.getState();
   return {
     cameraHeight,
     currentAngles: { ...currentAngles },
+    groundCollisionEnabled,
+    headStyle,
     targetAngles: { ...targetAngles },
     lockedSegment,
   };
+}
+
+export function getBallState() {
+  return getBallPhysicsState();
 }
 
 export function subscribeRobotState(listener: (state: RobotSnapshot) => void) {
@@ -109,21 +153,17 @@ export function subscribeRobotState(listener: (state: RobotSnapshot) => void) {
 export function setJoint(
   joint: JointName,
   angleDeg: number,
-  durationMs = DEFAULT_DURATION_MS,
 ): RobotStateMessage {
-  useRobotStore.getState().animateToAngles(
-    {
-      [joint]: clampJointAngle(joint, angleDeg),
-    },
-    durationMs,
-  );
+  cancelJointMotion(joint);
+  useRobotStore.getState().setAngles({
+    [joint]: clampJointAngle(joint, angleDeg),
+  });
 
   return stateMessage();
 }
 
 export function setJoints(
   anglesDeg: Partial<Record<JointName, number>>,
-  durationMs = DEFAULT_DURATION_MS,
 ): RobotStateMessage {
   const validAngles: Partial<Record<JointName, number>> = {};
 
@@ -131,11 +171,12 @@ export function setJoints(
     const value = anglesDeg[joint];
 
     if (typeof value === "number" && Number.isFinite(value)) {
+      cancelJointMotion(joint);
       validAngles[joint] = clampJointAngle(joint, value);
     }
   }
 
-  useRobotStore.getState().animateToAngles(validAngles, durationMs);
+  useRobotStore.getState().setAngles(validAngles);
   return stateMessage();
 }
 
@@ -144,8 +185,19 @@ export function lockSegment(segment: LockSegment): RobotStateMessage {
   return stateMessage();
 }
 
-export function resetPose(durationMs = DEFAULT_DURATION_MS): RobotStateMessage {
-  useRobotStore.getState().resetPose(durationMs);
+export function setGroundCollision(enabled: boolean): RobotStateMessage {
+  useRobotStore.getState().setGroundCollisionEnabled(enabled);
+  return stateMessage();
+}
+
+export function setHeadStyle(style: HeadStyle): RobotStateMessage {
+  useRobotStore.getState().setHeadStyle(style);
+  return stateMessage();
+}
+
+export function resetPose(): RobotStateMessage {
+  cancelAllJointMotions();
+  useRobotStore.getState().resetPose();
   return stateMessage();
 }
 
@@ -157,6 +209,20 @@ export function setCameraHeight(height: number): RobotStateMessage {
 export function resetCamera(): RobotStateMessage {
   useRobotStore.getState().resetCamera();
   return stateMessage();
+}
+
+export function resetBall(): RobotStateMessage {
+  useRobotStore.getState().resetBall();
+  return stateMessage();
+}
+
+export function setBallPosition(position: SceneObjectPosition): RobotStateMessage {
+  useRobotStore.getState().setBallPosition(position);
+  return stateMessage();
+}
+
+export function moveJoint(motion: JointMotion): RobotMotionScheduledMessage {
+  return { type: "motion_scheduled", motion: scheduleJointMotion(motion) };
 }
 
 export function applyRobotCommand(command: unknown): RobotCommandResult {
@@ -173,7 +239,7 @@ export function applyRobotCommand(command: unknown): RobotCommandResult {
       return errorMessage("angleDeg must be a finite number.");
     }
 
-    return setJoint(command.joint, command.angleDeg, normalizeDuration(command.durationMs));
+    return setJoint(command.joint, command.angleDeg);
   }
 
   if (command.type === "set_joints") {
@@ -195,7 +261,50 @@ export function applyRobotCommand(command: unknown): RobotCommandResult {
       angles[joint] = value;
     }
 
-    return setJoints(angles, normalizeDuration(command.durationMs));
+    return setJoints(angles);
+  }
+
+  if (command.type === "move_joint") {
+    if (!isJointName(command.joint)) {
+      return errorMessage("Unknown joint.");
+    }
+    if (typeof command.toAngleDeg !== "number" || !Number.isFinite(command.toAngleDeg)) {
+      return errorMessage("toAngleDeg must be a finite number.");
+    }
+    if (
+      command.fromAngleDeg !== undefined &&
+      (typeof command.fromAngleDeg !== "number" || !Number.isFinite(command.fromAngleDeg))
+    ) {
+      return errorMessage("fromAngleDeg must be a finite number.");
+    }
+    const hasDuration =
+      typeof command.durationMs === "number" &&
+      Number.isFinite(command.durationMs) &&
+      command.durationMs >= 0;
+    const hasSpeed =
+      typeof command.speedDegPerSecond === "number" &&
+      Number.isFinite(command.speedDegPerSecond) &&
+      command.speedDegPerSecond > 0;
+    if (!hasDuration && !hasSpeed) {
+      return errorMessage("Provide durationMs >= 0 or speedDegPerSecond > 0.");
+    }
+    if (
+      command.delayMs !== undefined &&
+      (typeof command.delayMs !== "number" ||
+        !Number.isFinite(command.delayMs) ||
+        command.delayMs < 0)
+    ) {
+      return errorMessage("delayMs must be a finite number >= 0.");
+    }
+
+    return moveJoint({
+      joint: command.joint,
+      fromAngleDeg: command.fromAngleDeg as number | undefined,
+      toAngleDeg: command.toAngleDeg,
+      durationMs: hasDuration ? (command.durationMs as number) : undefined,
+      speedDegPerSecond: hasSpeed ? (command.speedDegPerSecond as number) : undefined,
+      delayMs: command.delayMs as number | undefined,
+    });
   }
 
   if (command.type === "lock_segment") {
@@ -206,8 +315,24 @@ export function applyRobotCommand(command: unknown): RobotCommandResult {
     return lockSegment(command.segment);
   }
 
+  if (command.type === "set_ground_collision") {
+    if (typeof command.enabled !== "boolean") {
+      return errorMessage("enabled must be a boolean.");
+    }
+
+    return setGroundCollision(command.enabled);
+  }
+
+  if (command.type === "set_head_style") {
+    if (!isHeadStyle(command.style)) {
+      return errorMessage("Unknown head style.");
+    }
+
+    return setHeadStyle(command.style);
+  }
+
   if (command.type === "reset_pose") {
-    return resetPose(normalizeDuration(command.durationMs));
+    return resetPose();
   }
 
   if (command.type === "set_camera_height") {
@@ -222,16 +347,26 @@ export function applyRobotCommand(command: unknown): RobotCommandResult {
     return resetCamera();
   }
 
+  if (command.type === "reset_ball") {
+    return resetBall();
+  }
+
   return errorMessage(`Unknown command type: ${command.type}.`);
 }
 
 export const robotApi = {
   applyRobotCommand,
+  getBallState,
   getRobotState,
   lockSegment,
+  moveJoint,
+  resetBall,
   resetCamera,
   resetPose,
   setCameraHeight,
+  setBallPosition,
+  setGroundCollision,
+  setHeadStyle,
   setJoint,
   setJoints,
   subscribeRobotState,
