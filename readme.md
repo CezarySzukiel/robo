@@ -25,3 +25,10 @@ Komendy stawów działają natychmiast, dokładnie tak jak suwaki.
 ## Backend
 
 Szkielet FastAPI w `backend/` przekazuje komendy do frontendu przez WebSocket. Instrukcja uruchomienia i przykład sterowania prawą nogą znajdują się w `backend/readme.md`.
+
+```bash
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+python driver.py
+```
